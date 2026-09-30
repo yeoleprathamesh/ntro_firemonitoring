@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="NTRO Sentinel: Defense & Geospatial Thermal Anomaly Reconnaissance Intelligence System powered by Machine Learning." />
+    <title>NTRO Sentinel | Geospatial Thermal Anomaly Intelligence System</title>
+    <link rel="icon" type="image/jpeg" href="/ntro_emblem.jpg" />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Top Tactical Header -->
+      <header class="tactical-header" id="tactical-header">
+        <div class="header-left">
+          <div class="emblem-wrapper">
+            <img src="/ntro_emblem.jpg" alt="NTRO Emblem" class="ntro-logo" />
+            <div class="radar-ping"></div>
+          </div>
+          <div class="brand-text">
+            <div class="brand-eyebrow">NATIONAL TECHNICAL RESEARCH ORGANISATION // DEFENSE GEOSPATIAL INTELLIGENCE</div>
+            <h1 class="brand-title">NTRO SENTINEL <span class="version-tag">v2.0 ML</span></h1>
+          </div>
+        </div>
+
+        <div class="header-center">
+          <div class="telemetry-pill">
+            <span class="pill-dot status-pulse" id="server-status-dot"></span>
+            <span class="pill-label">BACKEND:</span>
+            <span class="pill-val" id="server-status-text">CONNECTING</span>
+          </div>
+          <div class="telemetry-pill">
+            <span class="pill-icon">🛰️</span>
+            <span class="pill-label">CATALOG:</span>
+            <span class="pill-val" id="header-records-count">78,452</span>
+          </div>
+          <div class="telemetry-pill">
+            <span class="pill-icon">🧠</span>
+            <span class="pill-label">MODEL:</span>
+            <span class="pill-val" id="header-model-name">RandomForest (95.9% AUC)</span>
+          </div>
+          <div class="telemetry-pill clock-pill">
+            <span class="pill-icon">⏱️</span>
+            <span class="pill-val monospace" id="utc-clock">00:00:00 UTC</span>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <button class="tactical-btn primary-glow" id="btn-quick-simulate" title="Simulate satellite thermal anomaly pass">
+            <span class="btn-icon">⚡</span>
+            <span>SIMULATE PASS</span>
+          </button>
+          <button class="tactical-btn secondary" id="btn-toggle-sound" title="Toggle Tactical Audio Alerts">
+            <span class="btn-icon" id="sound-icon">🔊</span>
+            <span id="sound-text">AUDIO ON</span>
+          </button>
+          <button class="tactical-btn secondary" id="btn-toggle-layer" title="Switch Map Tiles (Dark / Satellite)">
+            <span class="btn-icon">🗺️</span>
+            <span id="layer-mode-text">SATELLITE VIEW</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Operational Dashboard Layout -->
+      <main class="dashboard-body">
+        <!-- Center-Left Map Viewport -->
+        <section class="map-section" id="map-section" aria-label="Geospatial Map Viewport">
+          <!-- Floating Map Filter Bar -->
+          <div class="map-controls-panel glass-panel" id="map-controls-panel">
+            <div class="controls-header">
+              <span class="controls-title">
+                <span class="glow-indicator"></span> SATELLITE RECON FILTERS
+              </span>
+              <span class="points-loaded-badge" id="points-loaded-badge">Points: 0</span>
+            </div>
+
+            <div class="controls-row">
+              <div class="filter-group">
+                <label for="filter-class">TARGET CLASSIFICATION</label>
+                <div class="segmented-control" id="filter-class-segment">
+                  <button class="segment-btn active" data-class="all" id="btn-class-all">ALL (78K)</button>
+                  <button class="segment-btn industrial-tag" data-class="industrial" id="btn-class-ind">🏭 INDUSTRIAL</button>
+                  <button class="segment-btn vegetation-tag" data-class="vegetation" id="btn-class-veg">🌲 VEGETATION</button>
+                </div>
+              </div>
+
+              <div class="filter-group slider-group">
+                <div class="slider-header">
+                  <label for="slider-frp">MIN FIRE RADIATIVE POWER (MW)</label>
+                  <span class="slider-value monospace" id="slider-frp-val">0 MW</span>
+                </div>
+                <input type="range" id="slider-frp" min="0" max="300" value="0" step="5" class="tactical-slider" />
+              </div>
+
+              <div class="filter-group slider-group">
+                <div class="slider-header">
+                  <label for="slider-recurrence">MIN SPATIAL RECURRENCE</label>
+                  <span class="slider-value monospace" id="slider-recurrence-val">1x (All)</span>
+                </div>
+                <input type="range" id="slider-recurrence" min="1" max="15" value="1" step="1" class="tactical-slider" />
+              </div>
+
+              <div class="filter-group">
+                <label for="select-limit">RENDER LIMIT (PTS)</label>
+                <select id="select-limit" class="tactical-select">
+                  <option value="2000">2,000 Points</option>
+                  <option value="5000" selected>5,000 Points (Balanced)</option>
+                  <option value="12000">12,000 Points (Deep Recon)</option>
+                  <option value="30000">30,000 Points (Max Density)</option>
+                </select>
+              </div>
+
+              <div class="filter-actions">
+                <button class="tactical-btn refresh-btn" id="btn-apply-filters" title="Query API & Refresh Thermal Points">
+                  <span class="btn-icon">🔄</span>
+                  <span>REFRESH RADAR</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Quick Fly-to Tactical Hotspots -->
+            <div class="hotspots-quick-bar">
+              <span class="quick-bar-label">TACTICAL HOTSPOTS:</span>
+              <button class="hotspot-chip" data-lat="20.95" data-lon="85.22" data-zoom="11">Talcher / Angul</button>
+              <button class="hotspot-chip" data-lat="22.35" data-lon="82.68" data-zoom="11">Korba Power Hub</button>
+              <button class="hotspot-chip" data-lat="24.19" data-lon="82.66" data-zoom="11">Singrauli Coal Belt</button>
+              <button class="hotspot-chip" data-lat="23.75" data-lon="86.41" data-zoom="11">Jharia Coalfield</button>
+              <button class="hotspot-chip" data-lat="22.47" data-lon="69.85" data-zoom="10">Jamnagar Refinery</button>
+              <button class="hotspot-chip" data-lat="21.14" data-lon="79.08" data-zoom="5">Pan-India View</button>
+            </div>
+          </div>
+
+          <!-- Map Container -->
+          <div id="map" class="map-container"></div>
+
+          <!-- Map Floating Legend -->
+          <div class="map-legend glass-panel">
+            <div class="legend-title">THERMAL CLASSIFICATION MATRIX</div>
+            <div class="legend-item">
+              <span class="legend-swatch industrial-swatch"></span>
+              <span class="legend-text"><strong>Industrial Anomaly</strong> (Recurrent, Nocturnal, Refineries/Smelters)</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-swatch vegetation-swatch"></span>
+              <span class="legend-text"><strong>Wildfire / Biomass</strong> (Isolated, Diurnal, Forest / Stubble)</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-swatch flare-swatch"></span>
+              <span class="legend-text"><strong>Critical Radiative Flare</strong> (FRP &ge; 60 MW)</span>
+            </div>
+          </div>
+
+          <!-- Live Scanning Radar Overlay Canvas (subtle visual sweep effect) -->
+          <canvas id="radar-sweep-canvas" class="radar-canvas-overlay" pointer-events="none"></canvas>
+        </section>
+
+        <!-- Right Side Tactical Intelligence Panel -->
+        <aside class="sidebar-section" id="sidebar-section" aria-label="Tactical Intelligence Command Sidebar">
+          <!-- Sidebar Navigation Tabs -->
+          <div class="sidebar-tabs" role="tablist">
+            <button class="sidebar-tab active" data-tab="tab-stream" id="tab-btn-stream" role="tab" aria-selected="true">
+              <span class="tab-icon">⚡</span>
+              <span>LIVE RECON</span>
+            </button>
+            <button class="sidebar-tab" data-tab="tab-inspector" id="tab-btn-inspector" role="tab" aria-selected="false">
+              <span class="tab-icon">🎯</span>
+              <span>TARGET INSPECTOR</span>
+            </button>
+            <button class="sidebar-tab" data-tab="tab-analytics" id="tab-btn-analytics" role="tab" aria-selected="false">
+              <span class="tab-icon">📊</span>
+              <span>HOTSPOTS & ML</span>
+            </button>
+          </div>
+
+          <!-- Tab Content Containers -->
+          <div class="tab-contents">
+            <!-- TAB 1: LIVE RECON STREAM & SIMULATION -->
+            <div class="tab-panel active" id="tab-stream" role="tabpanel">
+              <div class="panel-section simulator-box glass-panel">
+                <div class="section-title">
+                  <span>🛰️ SATELLITE PASS SIMULATION ENGINE</span>
+                  <span class="badge live-badge">LIVE ORBIT</span>
+                </div>
+                <p class="section-desc">Generate real-time MODIS / VIIRS orbital pass detections to test Random Forest inference and risk attribution in real-time.</p>
+
+                <div class="sim-actions-row">
+                  <select id="sim-scenario-select" class="tactical-select full-width">
+                    <option value="industrial_cluster">Simulation: Angul / Talcher Industrial Cluster (Heavy FRP)</option>
+                    <option value="wildfire_event">Simulation: Forest / Crop Burning Event (Isolated)</option>
+                    <option value="random">Simulation: Random Historical Satellite Pass</option>
+                  </select>
+                  <button class="tactical-btn primary-glow pulse-btn" id="btn-trigger-simulation">
+                    <span>⚡ TRIGGER ORBITAL DETECTION</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Last Intercepted Detection Card -->
+              <div class="panel-section active-anomaly-box glass-panel" id="latest-alert-card">
+                <div class="section-title">
+                  <span>📡 LATEST INTERCEPTED THERMAL SIGNATURE</span>
+                  <span class="risk-badge badge-neutral" id="alert-risk-badge">READY</span>
+                </div>
+
+                <div class="alert-details-grid" id="alert-details-grid">
+                  <div class="detail-cell">
+                    <span class="detail-label">CLASSIFICATION</span>
+                    <span class="detail-val highlight" id="alert-class-name">Standing By for Ingestion</span>
+                  </div>
+                  <div class="detail-cell">
+                    <span class="detail-label">ML CONFIDENCE</span>
+                    <span class="detail-val monospace" id="alert-confidence">-- %</span>
+                  </div>
+                  <div class="detail-cell">
+                    <span class="detail-label">COORDINATES</span>
+                    <span class="detail-val monospace" id="alert-coordinates">--°, --°</span>
+                  </div>
+                  <div class="detail-cell">
+                    <span class="detail-label">RADIATIVE POWER</span>
+                    <span class="detail-val monospace" id="alert-frp">-- MW</span>
+                  </div>
+                  <div class="detail-cell">
+                    <span class="detail-label">CHANNEL 21 TEMP</span>
+                    <span class="detail-val monospace" id="alert-temp">-- K</span>
+                  </div>
+                  <div class="detail-cell">
+                    <span class="detail-label">SPATIAL RECURRENCE</span>
+                    <span class="detail-val monospace" id="alert-recurrence">-- detections</span>
+                  </div>
+                </div>
+
+                <!-- Probability Bar -->
+                <div class="probability-container">
+                  <div class="prob-labels">
+                    <span class="prob-title">INDUSTRIAL PROBABILITY</span>
+                    <span class="prob-value monospace" id="alert-prob-value">0%</span>
+                  </div>
+                  <div class="progress-track">
+                    <div class="progress-fill" id="alert-prob-fill" style="width: 0%;"></div>
+                  </div>
+                </div>
+
+                <!-- Strategic Explanation -->
+                <div class="explanation-box" id="alert-explanation-box">
+                  <div class="expl-tag">DEFENSE INTELLIGENCE ASSESSMENT</div>
+                  <p id="alert-explanation-text">System is listening for incoming orbital thermal anomalies. Click "Trigger Orbital Detection" or interact with any point on the map to inspect telemetry.</p>
+                </div>
+
+                <button class="tactical-btn secondary full-width" id="btn-fly-to-latest" style="display: none; margin-top: 10px;">
+                  <span>🎯 FOCUS ON MAP COORDINATES</span>
+                </button>
+              </div>
+
+              <!-- Recent Anomaly Activity Stream -->
+              <div class="panel-section history-stream-box glass-panel">
+                <div class="section-title">
+                  <span>📋 RECENT INTERCEPT FEED</span>
+                  <span class="count-tag" id="feed-count-tag">0 logged</span>
+                </div>
+                <div class="stream-feed-list" id="stream-feed-list">
+                  <div class="empty-feed-placeholder">
+                    <div class="radar-pulse-ring"></div>
+                    <span>No simulated anomalies ingested yet this session.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 2: MANUAL TARGET INSPECTOR & ML SANDBOX -->
+            <div class="tab-panel" id="tab-inspector" role="tabpanel">
+              <div class="panel-section glass-panel">
+                <div class="section-title">
+                  <span>🔬 ANOMALY PARAMETER INGESTION</span>
+                  <button class="btn-micro" id="btn-fill-preset-ind">PRESET: SMELTER</button>
+                  <button class="btn-micro" id="btn-fill-preset-wild">PRESET: WILDFIRE</button>
+                </div>
+                <p class="section-desc">Test manual telemetry vectors against the Random Forest classifier. Adjust thermal brightness, FRP, and time of day.</p>
+
+                <form id="inspector-form" class="tactical-form">
+                  <div class="form-row two-col">
+                    <div class="input-field">
+                      <label for="inp-lat">LATITUDE (°N)</label>
+                      <input type="number" id="inp-lat" step="any" min="-90" max="90" value="21.125" required class="tactical-input" />
+                    </div>
+                    <div class="input-field">
+                      <label for="inp-lon">LONGITUDE (°E)</label>
+                      <input type="number" id="inp-lon" step="any" min="-180" max="180" value="85.050" required class="tactical-input" />
+                    </div>
+                  </div>
+
+                  <div class="form-row two-col">
+                    <div class="input-field">
+                      <label for="inp-b21">BRIGHTNESS CH21/22 (K)</label>
+                      <input type="number" id="inp-b21" step="any" min="250" max="600" value="382.4" required class="tactical-input" />
+                    </div>
+                    <div class="input-field">
+                      <label for="inp-b31">BRIGHTNESS CH31 (K)</label>
+                      <input type="number" id="inp-b31" step="any" min="200" max="450" value="305.2" required class="tactical-input" />
+                    </div>
+                  </div>
+
+                  <div class="form-row two-col">
+                    <div class="input-field">
+                      <label for="inp-frp">FIRE RADIATIVE POWER (MW)</label>
+                      <input type="number" id="inp-frp" step="any" min="0" max="4000" value="85.0" required class="tactical-input" />
+                    </div>
+                    <div class="input-field">
+                      <label for="inp-confidence">DETECTION CONFIDENCE (%)</label>
+                      <input type="number" id="inp-confidence" step="any" min="0" max="100" value="95" required class="tactical-input" />
+                    </div>
+                  </div>
+
+                  <div class="form-row two-col">
+                    <div class="input-field">
+                      <label for="inp-daynight">SOLAR PHASE</label>
+                      <select id="inp-daynight" class="tactical-select">
+                        <option value="N" selected>Night Pass (Nocturnal)</option>
+                        <option value="D">Day Pass (Diurnal)</option>
+                      </select>
+                    </div>
+                    <div class="input-field">
+                      <label for="inp-recurrence">RECURRENCE (OPTIONAL)</label>
+                      <input type="number" id="inp-recurrence" step="1" min="1" max="100" placeholder="Auto (via KDTree)" class="tactical-input" />
+                    </div>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="slider-header">
+                      <label for="inp-threshold">DECISION THRESHOLD: <span id="threshold-val-display" class="monospace">0.55</span></label>
+                    </div>
+                    <input type="range" id="inp-threshold" min="0.1" max="0.9" step="0.05" value="0.55" class="tactical-slider" />
+                  </div>
+
+                  <button type="submit" class="tactical-btn primary-glow full-width" id="btn-submit-prediction">
+                    <span>⚡ RUN ML INFERENCE</span>
+                  </button>
+                </form>
+
+                <!-- Inference Output Box -->
+                <div class="prediction-output-box" id="prediction-output-box" style="display: none;">
+                  <div class="pred-header">
+                    <span class="pred-title">INFERENCE RESULT</span>
+                    <span class="risk-badge" id="pred-risk-badge">CRITICAL</span>
+                  </div>
+                  <div class="pred-main-class" id="pred-class-name">Industrial Thermal Anomaly</div>
+                  <div class="pred-probs-bar">
+                    <div class="prob-col">
+                      <span class="prob-pct" id="pred-prob-ind">0.0%</span>
+                      <span class="prob-sub">INDUSTRIAL</span>
+                    </div>
+                    <div class="prob-divider"></div>
+                    <div class="prob-col">
+                      <span class="prob-pct" id="pred-prob-veg">0.0%</span>
+                      <span class="prob-sub">VEGETATION</span>
+                    </div>
+                  </div>
+                  <div class="pred-expl" id="pred-explanation">--</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 3: HOTSPOTS ANALYTICS & ML ARCHITECTURE -->
+            <div class="tab-panel" id="tab-analytics" role="tabpanel">
+              <!-- KPI Cards Grid -->
+              <div class="analytics-kpi-grid">
+                <div class="kpi-card glass-panel">
+                  <div class="kpi-icon">🏭</div>
+                  <div class="kpi-val" id="kpi-industrial-pct">7.5%</div>
+                  <div class="kpi-sub">Industrial Fraction (5,898 pts)</div>
+                </div>
+                <div class="kpi-card glass-panel">
+                  <div class="kpi-icon">🔥</div>
+                  <div class="kpi-val" id="kpi-max-frp">3,691 MW</div>
+                  <div class="kpi-sub">Peak Radiative Power</div>
+                </div>
+                <div class="kpi-card glass-panel">
+                  <div class="kpi-icon">📍</div>
+                  <div class="kpi-val" id="kpi-recurring-sites">324</div>
+                  <div class="kpi-sub">High Recurrence Sites (&ge;5x)</div>
+                </div>
+                <div class="kpi-card glass-panel">
+                  <div class="kpi-icon">🎯</div>
+                  <div class="kpi-val">95.9%</div>
+                  <div class="kpi-sub">Model ROC-AUC Score</div>
+                </div>
+              </div>
+
+              <!-- Top Industrial Clusters Ranked List -->
+              <div class="panel-section glass-panel">
+                <div class="section-title">
+                  <span>🏆 TOP RECURRENT INDUSTRIAL HUBS</span>
+                  <span class="count-tag">NASA MODIS</span>
+                </div>
+                <div class="hotspots-list" id="hotspots-list">
+                  <div class="loading-state">Cataloging spatial clusters...</div>
+                </div>
+              </div>
+
+              <!-- Feature Importances Chart -->
+              <div class="panel-section glass-panel">
+                <div class="section-title">
+                  <span>🧠 RANDOM FOREST FEATURE WEIGHTS</span>
+                </div>
+                <div class="chart-container" style="position: relative; height: 240px;">
+                  <canvas id="features-chart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </main>
+
+      <!-- Bottom Telemetry Status Bar -->
+      <footer class="tactical-footer" id="tactical-footer">
+        <div class="footer-left">
+          <span class="status-indicator"></span>
+          <span>SYSTEM ACTIVE // SECURE ORBITAL LINK CONNECTED</span>
+        </div>
+        <div class="footer-center">
+          <span>DATA SOURCE: NASA FIRMS MODIS C6.1 (INDIA REGION)</span>
+          <span class="separator">|</span>
+          <span>SPATIAL RESOLUTION: 1.0 KM PIXEL</span>
+          <span class="separator">|</span>
+          <span>CLASSIFIER: RANDOM FOREST (120 TREES, CALIBRATED)</span>
+        </div>
+        <div class="footer-right">
+          <span>COORDINATES REFERENCE: WGS 84</span>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
