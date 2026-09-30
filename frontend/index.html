@@ -9,7 +9,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   </head>
   <body>
@@ -22,46 +22,56 @@
             <div class="radar-ping"></div>
           </div>
           <div class="brand-text">
-            <div class="brand-eyebrow">NATIONAL TECHNICAL RESEARCH ORGANISATION // DEFENSE GEOSPATIAL INTELLIGENCE</div>
+            <div class="brand-eyebrow">NATIONAL TECHNICAL RESEARCH ORGANISATION // GEOSPATIAL DEFENSE</div>
             <h1 class="brand-title">NTRO SENTINEL <span class="version-tag">v2.0 ML</span></h1>
           </div>
         </div>
 
         <div class="header-center">
-          <div class="telemetry-pill">
-            <span class="pill-dot status-pulse" id="server-status-dot"></span>
-            <span class="pill-label">BACKEND:</span>
-            <span class="pill-val" id="server-status-text">CONNECTING</span>
-          </div>
-          <div class="telemetry-pill">
-            <span class="pill-icon">🛰️</span>
-            <span class="pill-label">CATALOG:</span>
-            <span class="pill-val" id="header-records-count">78,452</span>
-          </div>
-          <div class="telemetry-pill">
-            <span class="pill-icon">🧠</span>
-            <span class="pill-label">MODEL:</span>
-            <span class="pill-val" id="header-model-name">RandomForest (95.9% AUC)</span>
-          </div>
-          <div class="telemetry-pill clock-pill">
-            <span class="pill-icon">⏱️</span>
-            <span class="pill-val monospace" id="utc-clock">00:00:00 UTC</span>
+          <div class="telemetry-strip" id="telemetry-strip">
+            <div class="telemetry-pill status-pill">
+              <span class="pill-dot status-pulse" id="server-status-dot"></span>
+              <span class="pill-label">BACKEND:</span>
+              <span class="pill-val" id="server-status-text">CONNECTING</span>
+            </div>
+            <div class="telemetry-divider"></div>
+            <div class="telemetry-pill">
+              <span class="pill-icon">🛰️</span>
+              <span class="pill-label">CATALOG:</span>
+              <span class="pill-val monospace" id="header-records-count">78,459</span>
+            </div>
+            <div class="telemetry-divider"></div>
+            <div class="telemetry-pill">
+              <span class="pill-icon">🧠</span>
+              <span class="pill-label">MODEL:</span>
+              <span class="pill-val" id="header-model-name">Random Forest (95.9% AUC)</span>
+            </div>
+            <div class="telemetry-divider"></div>
+            <div class="telemetry-pill clock-pill">
+              <span class="pill-icon">⏱️</span>
+              <span class="pill-val monospace" id="utc-clock">00:00:00 UTC</span>
+            </div>
           </div>
         </div>
 
         <div class="header-right">
-          <button class="tactical-btn primary-glow" id="btn-quick-simulate" title="Simulate satellite thermal anomaly pass">
-            <span class="btn-icon">⚡</span>
-            <span>SIMULATE PASS</span>
-          </button>
-          <button class="tactical-btn secondary" id="btn-toggle-sound" title="Toggle Tactical Audio Alerts">
-            <span class="btn-icon" id="sound-icon">🔊</span>
-            <span id="sound-text">AUDIO ON</span>
-          </button>
-          <button class="tactical-btn secondary" id="btn-toggle-layer" title="Switch Map Tiles (Dark / Satellite)">
-            <span class="btn-icon">🗺️</span>
-            <span id="layer-mode-text">SATELLITE VIEW</span>
-          </button>
+          <div class="action-btn-group">
+            <button class="tactical-btn primary-glow" id="btn-quick-simulate" title="Simulate satellite thermal anomaly pass [S]">
+              <span class="btn-icon">⚡</span>
+              <span>SIMULATE PASS</span>
+            </button>
+            <button class="tactical-btn secondary" id="btn-toggle-layer" title="Switch Map Tiles (Dark / Satellite) [M]">
+              <span class="btn-icon">🗺️</span>
+              <span id="layer-mode-text">SATELLITE VIEW</span>
+            </button>
+            <button class="tactical-btn secondary" id="btn-toggle-sound" title="Toggle Tactical Audio Alerts [A]">
+              <span class="btn-icon" id="sound-icon">🔊</span>
+              <span id="sound-text">AUDIO ON</span>
+            </button>
+            <button class="tactical-btn secondary icon-only-btn" id="btn-show-shortcuts" title="Keyboard Shortcuts [?]">
+              <span class="btn-icon">⌨️</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -69,33 +79,81 @@
       <main class="dashboard-body">
         <!-- Center-Left Map Viewport -->
         <section class="map-section" id="map-section" aria-label="Geospatial Map Viewport">
+
+          <!-- Collapsed Dock Pill (visible when filter panel is minimized) -->
+          <div class="collapsed-filter-dock" id="collapsed-filter-dock" style="display: none;">
+            <button class="dock-trigger-btn" id="btn-expand-filters" title="Open Recon Filters [F]">
+              <span class="btn-icon">⚙️</span>
+              <span>RECON FILTERS</span>
+              <span class="dock-badge" id="dock-points-badge">5,000 pts</span>
+            </button>
+          </div>
+
           <!-- Floating Map Filter Bar -->
           <div class="map-controls-panel glass-panel" id="map-controls-panel">
             <div class="controls-header">
-              <span class="controls-title">
-                <span class="glow-indicator"></span> SATELLITE RECON FILTERS
-              </span>
-              <span class="points-loaded-badge" id="points-loaded-badge">Points: 0</span>
+              <div class="header-title-wrap">
+                <span class="glow-indicator"></span>
+                <span class="controls-title">SATELLITE RECON CONTROLS</span>
+              </div>
+              <div class="header-meta-wrap">
+                <span class="points-loaded-badge" id="points-loaded-badge">Scanning Orbit...</span>
+                <button class="btn-icon-close" id="btn-collapse-filters" title="Collapse Filters [F]">◀</button>
+              </div>
             </div>
 
-            <div class="controls-row">
+            <!-- Filters Row 1: Target Class, View Layer Mode, Time Filter -->
+            <div class="controls-row primary-controls">
+              <!-- Classification Selector -->
               <div class="filter-group">
-                <label for="filter-class">TARGET CLASSIFICATION</label>
+                <label>TARGET CLASSIFICATION</label>
                 <div class="segmented-control" id="filter-class-segment">
-                  <button class="segment-btn active" data-class="all" id="btn-class-all">ALL (78K)</button>
+                  <button class="segment-btn active" data-class="all" id="btn-class-all">ALL</button>
                   <button class="segment-btn industrial-tag" data-class="industrial" id="btn-class-ind">🏭 INDUSTRIAL</button>
-                  <button class="segment-btn vegetation-tag" data-class="vegetation" id="btn-class-veg">🌲 VEGETATION</button>
+                  <button class="segment-btn vegetation-tag" data-class="vegetation" id="btn-class-veg">🌲 WILDFIRE</button>
                 </div>
               </div>
 
-              <div class="filter-group slider-group">
+              <!-- Map Render Mode (Points vs Heatmap vs Clusters) -->
+              <div class="filter-group">
+                <label>MAP DISPLAY MODE</label>
+                <div class="segmented-control" id="filter-viewmode-segment">
+                  <button class="segment-btn active" data-mode="points" id="btn-mode-points">⏺ POINTS</button>
+                  <button class="segment-btn" data-mode="heatmap" id="btn-mode-heatmap">♨️ HEATMAP</button>
+                  <button class="segment-btn" data-mode="clusters" id="btn-mode-clusters">☵ CLUSTERS</button>
+                </div>
+              </div>
+
+              <!-- Time Horizon Filter -->
+              <div class="filter-group">
+                <label>TIME HORIZON</label>
+                <div class="segmented-control" id="filter-time-segment">
+                  <button class="segment-btn active" data-days="0" id="btn-time-all">ALL TIME</button>
+                  <button class="segment-btn" data-days="1" id="btn-time-24h">24H</button>
+                  <button class="segment-btn" data-days="7" id="btn-time-7d">7D</button>
+                  <button class="segment-btn" data-days="30" id="btn-time-30d">30D</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Filters Row 2: Sliders & Actions -->
+            <div class="controls-row secondary-controls">
+              <!-- FRP Slider with Histogram HUD -->
+              <div class="filter-group slider-group frp-group">
                 <div class="slider-header">
-                  <label for="slider-frp">MIN FIRE RADIATIVE POWER (MW)</label>
+                  <label for="slider-frp">MIN FIRE RADIATIVE POWER</label>
                   <span class="slider-value monospace" id="slider-frp-val">0 MW</span>
+                </div>
+                <!-- Mini Histogram Bins Container -->
+                <div class="frp-histogram-hud" id="frp-histogram-hud" title="Dataset FRP Distribution & Active Threshold">
+                  <div class="hud-bars" id="histogram-bars">
+                    <!-- Populated dynamically -->
+                  </div>
                 </div>
                 <input type="range" id="slider-frp" min="0" max="300" value="0" step="5" class="tactical-slider" />
               </div>
 
+              <!-- Recurrence Slider -->
               <div class="filter-group slider-group">
                 <div class="slider-header">
                   <label for="slider-recurrence">MIN SPATIAL RECURRENCE</label>
@@ -104,53 +162,71 @@
                 <input type="range" id="slider-recurrence" min="1" max="15" value="1" step="1" class="tactical-slider" />
               </div>
 
-              <div class="filter-group">
-                <label for="select-limit">RENDER LIMIT (PTS)</label>
+              <!-- Render Limit -->
+              <div class="filter-group limit-group">
+                <label for="select-limit">RENDER LIMIT</label>
                 <select id="select-limit" class="tactical-select">
-                  <option value="2000">2,000 Points</option>
-                  <option value="5000" selected>5,000 Points (Balanced)</option>
-                  <option value="12000">12,000 Points (Deep Recon)</option>
-                  <option value="30000">30,000 Points (Max Density)</option>
+                  <option value="2000">2,000 Pts</option>
+                  <option value="5000" selected>5,000 Pts (Balanced)</option>
+                  <option value="15000">15,000 Pts (Deep Recon)</option>
+                  <option value="40000">40,000 Pts (Max Density)</option>
                 </select>
               </div>
 
+              <!-- Refresh / FIRMS Sync Button -->
               <div class="filter-actions">
-                <button class="tactical-btn refresh-btn" id="btn-apply-filters" title="Query API & Refresh Thermal Points">
-                  <span class="btn-icon">🔄</span>
-                  <span>REFRESH RADAR</span>
+                <button class="tactical-btn refresh-btn" id="btn-apply-filters" title="Sync live NASA FIRMS & reload anomalies">
+                  <span class="btn-icon">🛰️</span>
+                  <span>SYNC / REFRESH</span>
                 </button>
               </div>
             </div>
 
-            <!-- Quick Fly-to Tactical Hotspots -->
+            <!-- Quick Fly-to Tactical Hotspots with Live Counts -->
             <div class="hotspots-quick-bar">
-              <span class="quick-bar-label">TACTICAL HOTSPOTS:</span>
-              <button class="hotspot-chip" data-lat="20.95" data-lon="85.22" data-zoom="11">Talcher / Angul</button>
-              <button class="hotspot-chip" data-lat="22.35" data-lon="82.68" data-zoom="11">Korba Power Hub</button>
-              <button class="hotspot-chip" data-lat="24.19" data-lon="82.66" data-zoom="11">Singrauli Coal Belt</button>
-              <button class="hotspot-chip" data-lat="23.75" data-lon="86.41" data-zoom="11">Jharia Coalfield</button>
-              <button class="hotspot-chip" data-lat="22.47" data-lon="69.85" data-zoom="10">Jamnagar Refinery</button>
-              <button class="hotspot-chip" data-lat="21.14" data-lon="79.08" data-zoom="5">Pan-India View</button>
+              <span class="quick-bar-label">SAVED HOTSPOTS:</span>
+              <div class="hotspots-chips-container" id="hotspots-chips-container">
+                <button class="hotspot-chip" data-lat="20.95" data-lon="85.22" data-zoom="11">Talcher / Angul</button>
+                <button class="hotspot-chip" data-lat="22.35" data-lon="82.68" data-zoom="11">Korba Power Hub</button>
+                <button class="hotspot-chip" data-lat="24.19" data-lon="82.66" data-zoom="11">Singrauli Coal Belt</button>
+                <button class="hotspot-chip" data-lat="23.75" data-lon="86.41" data-zoom="11">Jharia Coalfield</button>
+                <button class="hotspot-chip" data-lat="22.47" data-lon="69.85" data-zoom="10">Jamnagar Refinery</button>
+                <button class="hotspot-chip" data-lat="21.14" data-lon="79.08" data-zoom="5">Pan-India View</button>
+              </div>
             </div>
           </div>
 
           <!-- Map Container -->
           <div id="map" class="map-container"></div>
 
-          <!-- Map Floating Legend -->
-          <div class="map-legend glass-panel">
-            <div class="legend-title">THERMAL CLASSIFICATION MATRIX</div>
-            <div class="legend-item">
-              <span class="legend-swatch industrial-swatch"></span>
-              <span class="legend-text"><strong>Industrial Anomaly</strong> (Recurrent, Nocturnal, Refineries/Smelters)</span>
+          <!-- Map Floating Legend (Collapsible & Clickable) -->
+          <div class="map-legend glass-panel" id="map-legend">
+            <div class="legend-header" id="legend-header">
+              <span class="legend-title">CLASSIFICATION MATRIX</span>
+              <button class="legend-collapse-btn" id="btn-toggle-legend" title="Toggle Legend [L]">&minus;</button>
             </div>
-            <div class="legend-item">
-              <span class="legend-swatch vegetation-swatch"></span>
-              <span class="legend-text"><strong>Wildfire / Biomass</strong> (Isolated, Diurnal, Forest / Stubble)</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-swatch flare-swatch"></span>
-              <span class="legend-text"><strong>Critical Radiative Flare</strong> (FRP &ge; 60 MW)</span>
+            <div class="legend-content" id="legend-content">
+              <div class="legend-item" data-legend-filter="industrial" title="Click to filter Industrial Anomalies">
+                <span class="legend-swatch industrial-swatch"></span>
+                <span class="legend-text">
+                  <strong class="color-ind">Industrial Anomaly</strong> (Flame Orange &bull; Smelters/Refineries)
+                </span>
+                <span class="legend-tag">FILTER</span>
+              </div>
+              <div class="legend-item" data-legend-filter="vegetation" title="Click to filter Wildfire / Biomass">
+                <span class="legend-swatch vegetation-swatch"></span>
+                <span class="legend-text">
+                  <strong class="color-veg">Wildfire / Biomass</strong> (Ocean Teal &bull; Stubble/Forest)
+                </span>
+                <span class="legend-tag">FILTER</span>
+              </div>
+              <div class="legend-item" data-legend-filter="flare" title="Click to filter Critical Flares (FRP &ge; 60 MW)">
+                <span class="legend-swatch flare-swatch"></span>
+                <span class="legend-text">
+                  <strong class="color-flare">Critical Flare (FRP &ge; 60 MW)</strong> (Solar Gold &bull; Blowouts)
+                </span>
+                <span class="legend-tag">FILTER</span>
+              </div>
             </div>
           </div>
 
@@ -162,17 +238,17 @@
         <aside class="sidebar-section" id="sidebar-section" aria-label="Tactical Intelligence Command Sidebar">
           <!-- Sidebar Navigation Tabs -->
           <div class="sidebar-tabs" role="tablist">
-            <button class="sidebar-tab active" data-tab="tab-stream" id="tab-btn-stream" role="tab" aria-selected="true">
+            <button class="sidebar-tab active" data-tab="tab-stream" id="tab-btn-stream" role="tab" aria-selected="true" title="Shortcut: [1]">
               <span class="tab-icon">⚡</span>
               <span>LIVE RECON</span>
             </button>
-            <button class="sidebar-tab" data-tab="tab-inspector" id="tab-btn-inspector" role="tab" aria-selected="false">
+            <button class="sidebar-tab" data-tab="tab-inspector" id="tab-btn-inspector" role="tab" aria-selected="false" title="Shortcut: [2]">
               <span class="tab-icon">🎯</span>
               <span>TARGET INSPECTOR</span>
             </button>
-            <button class="sidebar-tab" data-tab="tab-analytics" id="tab-btn-analytics" role="tab" aria-selected="false">
+            <button class="sidebar-tab" data-tab="tab-analytics" id="tab-btn-analytics" role="tab" aria-selected="false" title="Shortcut: [3]">
               <span class="tab-icon">📊</span>
-              <span>HOTSPOTS & ML</span>
+              <span>DEFCON & ML</span>
             </button>
           </div>
 
@@ -185,13 +261,13 @@
                   <span>🛰️ SATELLITE PASS SIMULATION ENGINE</span>
                   <span class="badge live-badge">LIVE ORBIT</span>
                 </div>
-                <p class="section-desc">Generate real-time MODIS / VIIRS orbital pass detections to test Random Forest inference and risk attribution in real-time.</p>
+                <p class="section-desc">Trigger simulated orbital thermal passes from VIIRS / MODIS to evaluate real-time Random Forest inference and atmospheric plume corridors.</p>
 
                 <div class="sim-actions-row">
                   <select id="sim-scenario-select" class="tactical-select full-width">
-                    <option value="industrial_cluster">Simulation: Angul / Talcher Industrial Cluster (Heavy FRP)</option>
-                    <option value="wildfire_event">Simulation: Forest / Crop Burning Event (Isolated)</option>
-                    <option value="random">Simulation: Random Historical Satellite Pass</option>
+                    <option value="industrial_cluster">Scenario: Angul / Talcher Smelter Cluster (Heavy FRP)</option>
+                    <option value="wildfire_event">Scenario: Agricultural Stubble / Forest Fire (Isolated)</option>
+                    <option value="random">Scenario: Random Historical Orbital Pass</option>
                   </select>
                   <button class="tactical-btn primary-glow pulse-btn" id="btn-trigger-simulation">
                     <span>⚡ TRIGGER ORBITAL DETECTION</span>
@@ -202,7 +278,7 @@
               <!-- Last Intercepted Detection Card -->
               <div class="panel-section active-anomaly-box glass-panel" id="latest-alert-card">
                 <div class="section-title">
-                  <span>📡 LATEST INTERCEPTED THERMAL SIGNATURE</span>
+                  <span>📡 LATEST INTERCEPTED SIGNATURE</span>
                   <span class="risk-badge badge-neutral" id="alert-risk-badge">READY</span>
                 </div>
 
@@ -233,13 +309,13 @@
                   </div>
                 </div>
 
-                <!-- Probability Bar -->
+                <!-- Neutral Multi-Gradient Probability Bar -->
                 <div class="probability-container">
                   <div class="prob-labels">
                     <span class="prob-title">INDUSTRIAL PROBABILITY</span>
                     <span class="prob-value monospace" id="alert-prob-value">0%</span>
                   </div>
-                  <div class="progress-track">
+                  <div class="progress-track neutral-track">
                     <div class="progress-fill" id="alert-prob-fill" style="width: 0%;"></div>
                   </div>
                 </div>
@@ -247,20 +323,41 @@
                 <!-- Strategic Explanation -->
                 <div class="explanation-box" id="alert-explanation-box">
                   <div class="expl-tag">DEFENSE INTELLIGENCE ASSESSMENT</div>
-                  <p id="alert-explanation-text">System is listening for incoming orbital thermal anomalies. Click "Trigger Orbital Detection" or interact with any point on the map to inspect telemetry.</p>
+                  <p id="alert-explanation-text">System is listening for incoming orbital thermal anomalies. Click "Trigger Orbital Detection" or select any point on the map to inspect telemetry vectors.</p>
                 </div>
 
-                <button class="tactical-btn secondary full-width" id="btn-fly-to-latest" style="display: none; margin-top: 10px;">
-                  <span>🎯 FOCUS ON MAP COORDINATES</span>
-                </button>
+                <div class="alert-actions-row" style="display: flex; gap: 8px; margin-top: 10px;">
+                  <button class="tactical-btn secondary full-width" id="btn-fly-to-latest" style="display: none;">
+                    <span>🎯 FOCUS ON MAP</span>
+                  </button>
+                  <button class="tactical-btn btn-view-plume full-width" id="btn-plume-latest" style="display: none;">
+                    <span>💨 PLUME CONE</span>
+                  </button>
+                </div>
               </div>
 
-              <!-- Recent Anomaly Activity Stream -->
+              <!-- Recent Anomaly Activity Stream with Filters & Sorting -->
               <div class="panel-section history-stream-box glass-panel">
                 <div class="section-title">
                   <span>📋 RECENT INTERCEPT FEED</span>
                   <span class="count-tag" id="feed-count-tag">0 logged</span>
                 </div>
+
+                <!-- Stream Filter Controls -->
+                <div class="feed-controls-row">
+                  <div class="feed-filter-chips">
+                    <button class="feed-chip active" data-feed-filter="all">ALL</button>
+                    <button class="feed-chip" data-feed-filter="critical">CRITICAL</button>
+                    <button class="feed-chip" data-feed-filter="industrial">INDUSTRIAL</button>
+                    <button class="feed-chip" data-feed-filter="vegetation">WILDFIRE</button>
+                  </div>
+                  <select id="feed-sort-select" class="tactical-select micro-select">
+                    <option value="newest">Newest First</option>
+                    <option value="frp">Highest FRP</option>
+                    <option value="conf">Highest Conf</option>
+                  </select>
+                </div>
+
                 <div class="stream-feed-list" id="stream-feed-list">
                   <div class="empty-feed-placeholder">
                     <div class="radar-pulse-ring"></div>
@@ -274,13 +371,23 @@
             <div class="tab-panel" id="tab-inspector" role="tabpanel">
               <div class="panel-section glass-panel">
                 <div class="section-title">
-                  <span>🔬 ANOMALY PARAMETER INGESTION</span>
-                  <button class="btn-micro" id="btn-fill-preset-ind">PRESET: SMELTER</button>
-                  <button class="btn-micro" id="btn-fill-preset-wild">PRESET: WILDFIRE</button>
+                  <span>🔬 TELEMETRY VECTOR SANDBOX</span>
+                  <div class="presets-btn-group">
+                    <button class="btn-micro" id="btn-fill-preset-ind">SMELTER</button>
+                    <button class="btn-micro" id="btn-fill-preset-wild">WILDFIRE</button>
+                    <button class="btn-micro" id="btn-fill-preset-flare">FLARING</button>
+                  </div>
                 </div>
-                <p class="section-desc">Test manual telemetry vectors against the Random Forest classifier. Adjust thermal brightness, FRP, and time of day.</p>
+                <p class="section-desc">Evaluate custom thermal telemetry vectors against the calibrated Random Forest model. Click any detection on the map to inspect.</p>
 
-                <form id="inspector-form" class="tactical-form">
+                <!-- Empty State prompt before selection -->
+                <div class="inspector-empty-state" id="inspector-empty-state">
+                  <div class="empty-icon">🎯</div>
+                  <div class="empty-title">NO TARGET SELECTED</div>
+                  <div class="empty-sub">Click any detection point on the map or select a preset above to load telemetry parameters.</div>
+                </div>
+
+                <form id="inspector-form" class="tactical-form" style="display: none;">
                   <div class="form-row two-col">
                     <div class="input-field">
                       <label for="inp-lat">LATITUDE (°N)</label>
@@ -316,14 +423,14 @@
 
                   <div class="form-row two-col">
                     <div class="input-field">
-                      <label for="inp-daynight">SOLAR PHASE</label>
+                      <label for="inp-daynight">SOLAR PASS PHASE</label>
                       <select id="inp-daynight" class="tactical-select">
                         <option value="N" selected>Night Pass (Nocturnal)</option>
                         <option value="D">Day Pass (Diurnal)</option>
                       </select>
                     </div>
                     <div class="input-field">
-                      <label for="inp-recurrence">RECURRENCE (OPTIONAL)</label>
+                      <label for="inp-recurrence">SPATIAL RECURRENCE</label>
                       <input type="number" id="inp-recurrence" step="1" min="1" max="100" placeholder="Auto (via KDTree)" class="tactical-input" />
                     </div>
                   </div>
@@ -355,7 +462,7 @@
                     <div class="prob-divider"></div>
                     <div class="prob-col">
                       <span class="prob-pct" id="pred-prob-veg">0.0%</span>
-                      <span class="prob-sub">VEGETATION</span>
+                      <span class="prob-sub">WILDFIRE</span>
                     </div>
                   </div>
                   <div class="pred-expl" id="pred-explanation">--</div>
@@ -363,18 +470,18 @@
               </div>
             </div>
 
-            <!-- TAB 3: HOTSPOTS ANALYTICS & ML ARCHITECTURE -->
+            <!-- TAB 3: HOTSPOTS ANALYTICS & DEFCON -->
             <div class="tab-panel" id="tab-analytics" role="tabpanel">
               <!-- KPI Cards Grid -->
               <div class="analytics-kpi-grid">
                 <div class="kpi-card glass-panel">
                   <div class="kpi-icon">🏭</div>
-                  <div class="kpi-val" id="kpi-industrial-pct">7.5%</div>
+                  <div class="kpi-val color-ind" id="kpi-industrial-pct">7.5%</div>
                   <div class="kpi-sub">Industrial Fraction (5,898 pts)</div>
                 </div>
                 <div class="kpi-card glass-panel">
                   <div class="kpi-icon">🔥</div>
-                  <div class="kpi-val" id="kpi-max-frp">3,691 MW</div>
+                  <div class="kpi-val color-flare" id="kpi-max-frp">3,691 MW</div>
                   <div class="kpi-sub">Peak Radiative Power</div>
                 </div>
                 <div class="kpi-card glass-panel">
@@ -384,8 +491,20 @@
                 </div>
                 <div class="kpi-card glass-panel">
                   <div class="kpi-icon">🎯</div>
-                  <div class="kpi-val">95.9%</div>
+                  <div class="kpi-val color-cyan">95.9%</div>
                   <div class="kpi-sub">Model ROC-AUC Score</div>
+                </div>
+              </div>
+
+              <!-- DEFCON-1 Explosions & Severe Thermal Anomalies -->
+              <div class="panel-section glass-panel">
+                <div class="section-title">
+                  <span>🚨 DEFCON-1 CRITICAL THERMAL SPIKES</span>
+                  <span class="risk-badge badge-critical" id="defcon-badge">+3.0σ OUTLIERS</span>
+                </div>
+                <p class="section-desc" style="margin-bottom: 8px;">Thermal spikes exceeding historical cluster baselines by &ge; +3.0σ. Indicates industrial blowouts or severe equipment events.</p>
+                <div class="defcon-list" id="defcon-list">
+                  <div class="loading-state">Evaluating baseline z-scores...</div>
                 </div>
               </div>
 
@@ -428,9 +547,34 @@
           <span>CLASSIFIER: RANDOM FOREST (120 TREES, CALIBRATED)</span>
         </div>
         <div class="footer-right">
-          <span>COORDINATES REFERENCE: WGS 84</span>
+          <span>COORDINATES: WGS 84 &bull; ALL TIMESTAMPS UTC</span>
         </div>
       </footer>
+
+      <!-- Keyboard Shortcuts Modal -->
+      <div class="modal-overlay" id="shortcuts-modal" style="display: none;">
+        <div class="modal-card glass-panel">
+          <div class="modal-header">
+            <span class="modal-title">⌨️ OPERATOR KEYBOARD SHORTCUTS</span>
+            <button class="modal-close-btn" id="btn-close-shortcuts">&times;</button>
+          </div>
+          <div class="shortcuts-grid">
+            <div class="shortcut-item"><kbd>F</kbd><span>Toggle Satellite Recon Filters</span></div>
+            <div class="legend-item-kbd"><kbd>L</kbd><span>Toggle Classification Legend</span></div>
+            <div class="shortcut-item"><kbd>S</kbd><span>Trigger Satellite Pass Simulation</span></div>
+            <div class="shortcut-item"><kbd>M</kbd><span>Toggle Map Tiles (Dark / Satellite)</span></div>
+            <div class="shortcut-item"><kbd>A</kbd><span>Toggle Tactical Audio Alerts</span></div>
+            <div class="shortcut-item"><kbd>1</kbd><span>Switch to Live Recon Stream</span></div>
+            <div class="shortcut-item"><kbd>2</kbd><span>Switch to Target Inspector Sandbox</span></div>
+            <div class="shortcut-item"><kbd>3</kbd><span>Switch to DEFCON & Analytics</span></div>
+            <div class="shortcut-item"><kbd>Esc</kbd><span>Close Modals / Deselect Target</span></div>
+            <div class="shortcut-item"><kbd>?</kbd><span>Open This Shortcuts Reference</span></div>
+          </div>
+          <div class="modal-footer">
+            <button class="tactical-btn secondary full-width" id="btn-dismiss-shortcuts">DISMISS</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Scripts -->
